@@ -39,7 +39,7 @@ process GEN_SE {
     path('quants/*')
 
     output:
-    tuple path("*.rds"), emit: se
+    path("*.rds"), emit: se
 
     script:
     """

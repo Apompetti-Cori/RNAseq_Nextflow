@@ -39,7 +39,8 @@ process SALMON_ALIGN {
     val(state)
 
     output:
-    tuple val(meta), path("*_quants/*"), emit: quants
+    path("*_quants/*"), emit: quants
+    val(meta), emit: meta
 
     script:
     
