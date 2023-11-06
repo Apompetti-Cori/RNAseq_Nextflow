@@ -127,9 +127,9 @@ process GEN_SE {
 
     message("Importing TE-loci counts with `edgeR::catchSalmon()`...")
     dirs <- list.dirs(
-    path = quants, 
-    full.names = TRUE,
-    recursive = FALSE
+        path = quants, 
+        full.names = TRUE,
+        recursive = FALSE
     )
 
     catch <- edgeR::catchSalmon(dirs, verbose = FALSE)
