@@ -30,10 +30,11 @@ include { FASTQC as PRETRIM_FASTQC } from './modules/fastqc/main' addParams(pubd
 include { TRIM_GALORE } from './modules/trim_galore/main'
 include { FASTQC as POSTTRIM_FASTQC } from './modules/fastqc/main' addParams(pubdir: 'posttrim_fastqc')
 include { SALMON_ALIGN } from './modules/salmon/salmon_align/main'
+include { GEN_SE } from './modules/salmon/gen_se/main'
 include { MULTIQC } from './modules/multiqc/main'
 
 //Provide sample table in csv format to have pipeline process samples via sample table
-params.sample_table = "${workflow.projectDir}/sample_table.csv"
+params.sample_table = "${workflow.projectDir}/sample_table_input.csv"
 if ( params.sample_table ){
     // Channel for the samplesheet
     ch_samplesheet = Channel.fromPath(params.sample_table)
@@ -155,7 +156,9 @@ workflow {
     state = POSTTRIM_FASTQC.out.collect()
     SALMON_ALIGN(TRIM_GALORE.out.reads.collect(flat: false).flatMap(), state)
 
-    //Run multiqc on pretrim fastqc output, trim_galore trimming report, posttrim fastqc output, bismark conversion output
-    MULTIQC(PRETRIM_FASTQC.out.collect().combine(POSTTRIM_FASTQC.out.collect()).combine(TRIM_GALORE.out.report.collect()).combine(BISMARK_ALIGN.out.report.collect()).combine(CONV_STATS_CREATE.out.report.collect()))
-}
+    //Run gen_se on salmon quants
+    GEN_SE(SALMON_ALIGN.out.quants.collect(flat: false).flatMap())
 
+    //Run multiqc on pretrim fastqc output, trim_galore trimming report, posttrim fastqc output, bismark conversion output
+    MULTIQC(PRETRIM_FASTQC.out.collect().combine(POSTTRIM_FASTQC.out.collect()).combine(TRIM_GALORE.out.report.collect()).combine(SALMON_ALIGN.out.quants.collect()))
+}

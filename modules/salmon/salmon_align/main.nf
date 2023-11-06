@@ -22,6 +22,7 @@ Define local params
 params.outdir = "./results"
 params.pubdir = "salmon_align"
 params.db = false
+params.salmon_boots = 30
 
 /*
 Run salmon on each read stored within the reads_ch channel
@@ -35,24 +36,38 @@ process SALMON_ALIGN {
 
     input:
     tuple val(meta), path(reads)
+    val(state)
 
     output:
-    tuple val(meta), path("_quants"), emit: reads
-    path("meta_info.json"), emit: report
+    tuple val(meta), path("*_quants/*"), emit: quants
 
     script:
-    def singleEnd = meta.single_end ? '' : '--paired'
-
-    """
-    salmon quant -i ${params.db} \
-                 -l 'A' \
-                 -1 ${reads[0]} \
-                 -2 ${reads[1]} \
-                 -o ${meta.id}_quants \
-                 --threads ${task.cpus} \
-                 --validateMappings \
-                 --gcBias \
-                 --seqBias \
-                 --numBootstraps ${params.salmon_boots};
-    """
+    
+    if(meta.single_end){
+      """
+      salmon quant -i ${params.db} \
+                   -l 'A' \
+                   -r ${reads} \
+                   -o ${meta.id}_quants \
+                   --threads ${task.cpus} \
+                   --validateMappings \
+                   --gcBias \
+                   --seqBias \
+                   --numBootstraps ${params.salmon_boots};
+      """
+    }
+    else{
+      """
+      salmon quant -i ${params.db} \
+                   -l 'A' \
+                   -1 ${reads[0]} \
+                   -2 ${reads[1]} \
+                   -o ${meta.id}_quants \
+                   --threads ${task.cpus} \
+                   --validateMappings \
+                   --gcBias \
+                   --seqBias \
+                   --numBootstraps ${params.salmon_boots};
+      """
+    }
 }
