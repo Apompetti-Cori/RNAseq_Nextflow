@@ -159,6 +159,6 @@ workflow {
     //Run gen_se on salmon quants
     GEN_SE(SALMON_ALIGN.out.quants.collect())
 
-    //Run multiqc on pretrim fastqc output, trim_galore trimming report, posttrim fastqc output, bismark conversion output
+    //Run multiqc on pretrim fastqc output, trim_galore trimming report, posttrim fastqc output, salmon align output
     MULTIQC(PRETRIM_FASTQC.out.collect().combine(POSTTRIM_FASTQC.out.collect()).combine(TRIM_GALORE.out.report.collect()).combine(SALMON_ALIGN.out.quants.collect()))
 }
