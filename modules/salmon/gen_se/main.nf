@@ -36,7 +36,7 @@ process GEN_SE {
     publishDir "${params.outdir}/gen_se", mode: 'copy'
 
     input:
-    tuple val(meta), path(quants)
+    path('quants/*')
 
     output:
     tuple path("*.rds"), emit: se
@@ -69,7 +69,7 @@ process GEN_SE {
         stop("SummarizedExperiment library is necessary")
     }
 
-    quants <- ${quants}
+    quants <- "./quants/"
     gtf_file <- ${gtf}
     grl_file <- ${grl}
     rwd_file <- ${rd}
