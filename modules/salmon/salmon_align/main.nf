@@ -39,11 +39,11 @@ process SALMON_ALIGN {
     val(state)
 
     output:
-    path("*_quants/*"), emit: quants
-    val(meta), emit: meta
-
-    script:
+    path("*_quants.tar.gz"), emit: quants
+    //path("*_quants/aux_info/meta_info.json"), emit: meta_info
+    //path("*_quants/libParams/flenDist.txt"), emit: flenDist
     
+    script:
     if(meta.single_end){
       """
       salmon quant -i ${params.db} \
@@ -55,6 +55,8 @@ process SALMON_ALIGN {
                    --gcBias \
                    --seqBias \
                    --numBootstraps ${params.salmon_boots};
+
+      tar -zcvf ${meta.id}_quants.tar.gz ${meta.id}_quants
       """
     }
     else{
@@ -69,6 +71,8 @@ process SALMON_ALIGN {
                    --gcBias \
                    --seqBias \
                    --numBootstraps ${params.salmon_boots};
+
+      tar -zcvf ${meta.id}_quants.tar.gz ${meta.id}_quants
       """
     }
 }

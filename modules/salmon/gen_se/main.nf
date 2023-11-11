@@ -36,20 +36,20 @@ process GEN_SE {
     publishDir "${params.outdir}/gen_se", mode: 'copy'
 
     input:
-    path('quants/*')
+    path('*')
 
     output:
     path("*.rds"), emit: se
 
-    script:
-    """
-    #!/usr/bin/env Rscript
+    shell:
+    '''
+    #! /usr/local/bin/Rscript
     
     if (!requireNamespace("data.table", quietly = TRUE)) {
-        stop("data.table library is necessary")
+    stop("data.table library is necessary")
     }
     suppressPackageStartupMessages(library(data.table))
-
+    
     if (!requireNamespace("edgeR", quietly = TRUE)) {
         stop("edgeR library is necessary")
     }
@@ -68,13 +68,13 @@ process GEN_SE {
     if (!requireNamespace("SummarizedExperiment", quietly = TRUE)) {
         stop("SummarizedExperiment library is necessary")
     }
-
-    quants <- "./quants/"
-    gtf_file <- ${gtf}
-    grl_file <- ${grl}
-    rwd_file <- ${rd}
+    
+    #quants <- "./quants_input/"
+    gtf_file <- "/home/gcalendo/data/20230201_rmsk-gentrome/data/mouse/gencode.vM25.annotation.gtf.gz"
+    grl_file <- "/home/gcalendo/data/20230201_rmsk-gentrome/data/mouse/rmsk-grl.rds"
+    rwd_file <- "/home/gcalendo/data/20230201_rmsk-gentrome/data/mouse/rmsk-rowData.tsv"
     outdir <- "."
-
+    
     message("Loading transcript GTF file: ", gtf_file)
     gtf <- rtracklayer::import(gtf_file)
     message("Loading GRangesList file: ", grl_file)
@@ -85,26 +85,41 @@ process GEN_SE {
     txdb <- suppressWarnings(GenomicFeatures::makeTxDbFromGRanges(gtf))
     message("Creating a GRangesList object for all transcripts by genes...")
     gene_grl <- GenomicFeatures::transcriptsBy(txdb, by = "gene")
-
+    
     message("Importing gene-level counts with `tximport::tximport()`...")
     gtf_dt <- as.data.table(data.frame(gtf))
     tx2gene <- unique(gtf_dt[, .(transcript_id, gene_id)])[!is.na(transcript_id)]
-
+    
     importTxQuants <- function(x) {
         dt <- fread(x)
         dt[Name %like% "^ENS"]
     }
-
+    
+    quants_tar <- list.files(
+        path = ".",
+        pattern = ".tar.gz",
+        full.names = TRUE,
+        recursive = TRUE
+    )
+    
+    get_quants <- function(quants_tar){
+        folder <- basename(tools::file_path_sans_ext(quants_tar,compression = TRUE))
+        untar(quants_tar)
+        return(paste(folder,"extracted"))
+        }
+    
+    lapply(quants_tar, FUN = get_quants)
+    
     quant_files <- list.files(
-        path = quants,
+        path = ".",
         pattern = "quant.sf",
         recursive = TRUE,
         full.names = TRUE
     )
-
+    
     # Make colnames of tximport data same as edgeR::catchSalmon import
-    names(quant_files) <- gsub("/quant.sf", "", quant_files, fixed = TRUE)
-
+    names(quant_files) <- stringr::str_match(quant_files, "([A-Za-z]*[0-9]*)_quants")[,2]
+    
     txi <- tximport::tximport(
     files = quant_files,
     type = "salmon",
@@ -115,51 +130,52 @@ process GEN_SE {
     )
     genes <- txi$counts
     genes <- genes[rowSums(genes) > 0, ]
-
+    
     # Filter the gene grl for only those genes in the count matrix
     gene_grl <- gene_grl[rownames(genes)]
-
+    
     # Check alignment
     stopifnot("Failed creating GRangesList for transcripts by genes" = 
             all(rownames(genes) == names(gene_grl)))
-
+    
     # TE counts ---------------------------------------------------------------
-
+    
     message("Importing TE-loci counts with `edgeR::catchSalmon()`...")
     dirs <- list.dirs(
-        path = quants, 
+        path = ".",
         full.names = TRUE,
         recursive = FALSE
     )
-
+    
     catch <- edgeR::catchSalmon(dirs, verbose = FALSE)
+    colnames(catch$counts) <- stringr::str_match(colnames(catch$counts), "([A-Za-z]*[0-9]*)_quants")[,2]
     scaled_counts <- with(catch, counts / annotation$Overdispersion)
     scaled_counts <- scaled_counts[rowSums(scaled_counts) > 0, ]
-
+    
     message("Annotating TE counts...")
     te <- scaled_counts[!grepl("^ENS", rownames(scaled_counts)), ]
-
+    
     # Subset the GRangesList and the rowData for only these hashes
     te_df <- te_rowdata[Hash %chin% rownames(te)]
     te_grl <- te_grl[rownames(te)]
-
+    
     stopifnot("Failed subsetting GRangesList for TEs" = 
             all(rownames(te) == names(te_grl)))
-
+    
     # Construct SummarizedExperiments -----------------------------------------
-
+    
     # Check that the genes and te matrices have the same colnames
     stopifnot("colnames of gene matrix does not match colnames of TEs matrix" = 
                 all(colnames(te) == colnames(genes)))
-
+    
     message("Combining gene and hash-level counts...")
     counts <- rbind(genes, te)
-
+    
     message("Combining GRanges for genes and hashes...")
     rowranges <- c(gene_grl, te_grl)
     stopifnot("Failed combining GRangesList objects" = 
             all(names(rowranges) == rownames(counts)))
-
+    
     message("Combining rowData feature-level annotations...")
     gene_df <- data.table(gene_id = rownames(genes))
     message("Joining gene names onto Ensembl IDs...")
@@ -175,7 +191,7 @@ process GEN_SE {
     rowdata <- rowdata[rownames(counts), ]
     stopifnot("Failed combining rowData information for genes and hashes" = 
             all(rownames(counts) == rownames(rowdata)))
-
+    
     message("Creating SummarizedExperiment objects...")
     # RangedSummarizedExperiment
     se <- SummarizedExperiment::SummarizedExperiment(
@@ -183,18 +199,18 @@ process GEN_SE {
     rowRanges = rowranges,
     metadata = list(catch = catch)
     )
-
+    
     # SummarizedExperiment
     se2 <- SummarizedExperiment::SummarizedExperiment(
     assays = list(counts = counts),
     rowData = rowdata,
     metadata = list(catch = catch)
     )
-
+    
     message("Saving RangedSummarizedExperiment to: ", file.path(outdir, "RangedSummarizedExperiment.rds"))
     saveRDS(se, file.path(outdir, "RangedSummarizedExperiment.rds"))
     message("Saving SummarizedExperiment to: ", file.path(outdir, "SummarizedExperiment.rds"))
     saveRDS(se2, file.path(outdir, "SummarizedExperiment.rds"))
     message("Done.")
-    """
+    '''
 }
