@@ -22,11 +22,8 @@ Configurable variables for pipeline
 ================================================================================
 */
 
-params.genome = false
 params.sample_table = false
 params.input_type = false
-params.multiqc_report_title = false
-
 
 /*
 ================================================================================

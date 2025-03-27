@@ -23,10 +23,7 @@ Configurable variables for module
 */
 
 params.outdir = "./nfoutput"
-params.pubdir = "multiqc"
-params.fileprefix = "multiqc_report"
 params.multiqc_config = "./modules/multiqc/multiqc_config.yaml"
-params.multiqc_report_title = "MultiQC Report"
 
 /*
 ================================================================================
@@ -42,10 +39,13 @@ process MULTIQC {
 
     conda 'bioconda::multiqc'
 
-    publishDir "${params.outdir}/${params.pubdir}"
+    publishDir "${params.outdir}/${pubdir}"
 
     input:
     path('multiqc_input/*')
+    val(pubdir)
+    val(report_title)
+    val(fileprefix)
 
     output:
     path("*.html")
@@ -54,7 +54,7 @@ process MULTIQC {
     """
     multiqc multiqc_input/ \
         --config ${params.multiqc_config} \
-        --title ${params.multiqc_report_title} \
-        --filename ${params.fileprefix}.html
+        --title ${report_title} \
+        --filename ${fileprefix}.html
     """
 }

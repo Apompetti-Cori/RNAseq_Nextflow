@@ -30,12 +30,7 @@ Include modules to main pipeline
 
 include { PREPROCESS_READS } from '../../modules/preprocess/main.nf'
 include { FASTP } from '../../modules/fastp/main.nf'
-include {
-    MULTIQC
-} from '../../modules/multiqc/main.nf' addParams(
-    multiqc_report_title: 'PREPROCESS Report',
-    pubdir: 'multiqc/preprocess'
-)
+include { MULTIQC } from '../../modules/multiqc/main.nf'
 
 /*
 ================================================================================
@@ -63,9 +58,14 @@ workflow PREPROCESS {
         FASTP(PREPROCESS_READS.out)
 
         // Run multiqc on the fastp output
-        MULTIQC(FASTP.out.json.collect())
+        MULTIQC(
+            FASTP.out.json.collect(),
+            "multiqc/preprocess",
+            "PREPROCESS Report",
+            "multiqc_report"
+        )
 
         emit:
             fastp = FASTP.out.reads
-            
+         
 }

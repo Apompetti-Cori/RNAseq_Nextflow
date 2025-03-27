@@ -69,10 +69,10 @@ process FASTP {
 
         """
         fastp \
-        --in1 ${reads[1]} \
-        --in2 ${reads[2]} \
-        --out1 ${meta.id}.trimmed.1.gz \
-        --out2 ${meta.id}.trimmed.2.gz \
+        --in1 ${reads[0]} \
+        --in2 ${reads[1]} \
+        --out1 ${meta.id}.trimmed.1.fq.gz \
+        --out2 ${meta.id}.trimmed.2.fq.gz \
         -h ${meta.id}.fastp.html \
         -j ${meta.id}.fastp.json \
         -w ${task.cpus}

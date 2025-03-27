@@ -32,7 +32,7 @@ process PREPROCESS_READS {
     tuple val(meta), path(reads_1), path(reads_2)
 
     output:
-    tuple val(meta), path("{*_mL_SE,*_sL_SE,*_mL_PE_merged,*_sL_PE_merged}.fq.gz")
+    tuple val(meta), path("{*_mL_SE,*_sL_SE,*_mL_PE_*,*_sL_PE_*}.fq.gz")
 
     script:
     if ( meta.multi_lane ){
@@ -43,8 +43,8 @@ process PREPROCESS_READS {
         }
         else {
             """
-            cat ${reads_1} > ${meta.id}_mL_1.fq.gz
-            cat ${reads_2} > ${meta.id}_mL_2.fq.gz
+            cat ${reads_1} > ${meta.id}_mL_PE_1.fq.gz
+            cat ${reads_2} > ${meta.id}_mL_PE_2.fq.gz
             """
         }
     }
@@ -56,8 +56,8 @@ process PREPROCESS_READS {
         }
         else {
             """
-            mv ${reads_1} ${meta.id}_sL_1.fq.gz
-            mv ${reads_2} ${meta.id}_sL_2.fq.gz
+            mv ${reads_1} ${meta.id}_sL_PE_1.fq.gz
+            mv ${reads_2} ${meta.id}_sL_PE_2.fq.gz
             """
         }
     }
