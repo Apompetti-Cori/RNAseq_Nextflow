@@ -1,3 +1,10 @@
 #!/bin/bash
 
-nextflow run "./RNAseq_Nextflow/main.nf" -with-report -with-trace --genome 'GRCm38RMSKsalmon' --multiqc_report_title 'MultiQC Report Title' --sample_table "./RNAseq_Nextflow/sample_table_input.csv" -resume
+nextflow -log $(pwd)/.logs/nextflow.log \
+run $(find $(pwd) -maxdepth 2 -type f -name "main.nf") \
+-resume \
+-work-dir
+-with-report $(pwd)/.logs/run-report.html \
+-with-trace $(pwd)/.logs/trace.txt \
+--sample_table $(find $(pwd) -type f -name "sample_table.csv") \
+--input_type "fastq"

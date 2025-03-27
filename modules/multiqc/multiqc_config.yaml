@@ -1,0 +1,11 @@
+report_header_info:
+  - Contact E-mail: "apompetti@coriell.org"
+  - Application Type: "RNA-seq"
+custom_logo: "./modules/multiqc/Coriell_Logo.png"
+custom_logo_url: "https://www.coriell.org/"
+exclude_modules:
+    - snippy
+    - snippy-core
+module_order:
+    - fastp
+    - salmon

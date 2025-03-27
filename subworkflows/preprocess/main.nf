@@ -22,17 +22,20 @@ Configurable variables for pipeline
 ================================================================================
 */
 
-params.genome = false
-params.sample_table = false
-params.input_type = false
-params.multiqc_report_title = false
-
-
 /*
 ================================================================================
 Include modules to main pipeline
 ================================================================================
 */
+
+include { PREPROCESS_READS } from '../../modules/preprocess/main.nf'
+include { FASTP } from '../../modules/fastp/main.nf'
+include {
+    MULTIQC
+} from '../../modules/multiqc/main.nf' addParams(
+    multiqc_report_title: 'PREPROCESS Report',
+    pubdir: 'multiqc/preprocess'
+)
 
 /*
 ================================================================================
@@ -40,15 +43,6 @@ Include functions to main pipeline
 ================================================================================
 */
 
-include { createInputChannel } from './functions/main.nf'
-
-/*
-================================================================================
-Include subworkflows to main pipeline
-================================================================================
-*/
-
-include { PREPROCESS } from './subworkflows/preprocess/main.nf'
 
 /*
 ================================================================================
@@ -56,12 +50,22 @@ Workflow declaration
 ================================================================================
 */
 
-workflow {
+workflow PREPROCESS {
 
-    // Ingest sample table to create input channel
-    input_ch = createInputChannel(params.sample_table, params.input_type)
+    take:
+        input_ch
 
-    // Run PREPROCESS subworkflow on input_ch
-    PREPROCESS(input_ch)
+    main:
+        // Preprocess the sample table to change the files listed inside. Concatenates any multilane files.
+        PREPROCESS_READS(input_ch)
 
+        // Trim and filter reads 
+        FASTP(PREPROCESS_READS.out)
+
+        // Run multiqc on the fastp output
+        MULTIQC(FASTP.out.json.collect())
+
+        emit:
+            fastp = FASTP.out.reads
+            
 }

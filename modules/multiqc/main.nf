@@ -1,37 +1,49 @@
 #!/usr/bin/env nextflow
 
 /*
+================================================================================
 Coriell Institute for Medical Research
-RNAseq Pipeline. Started November 2023.
 
 Contributors:
 Anthony Pompetti <apompetti@coriell.org>
-
-Methodology adapted from:
-Gennaro Calendo
+================================================================================
 */
 
 /*
+================================================================================
 Enable Nextflow DSL2
+================================================================================
 */
 nextflow.enable.dsl=2
 
 /*
-Define local params 
+================================================================================
+Configurable variables for module
+================================================================================
 */
-params.outdir = "./results"
+
+params.outdir = "./nfoutput"
 params.pubdir = "multiqc"
-params.multiqc_config = "${workflow.projectDir}/multiqc_config.yaml"
+params.fileprefix = "multiqc_report"
+params.multiqc_config = "./modules/multiqc/multiqc_config.yaml"
 params.multiqc_report_title = "MultiQC Report"
 
+/*
+================================================================================
+Module declaration
+================================================================================
+*/
+
+
 process MULTIQC {
-    memory '32 GB'
+
+    memory '8 GB'
     cpus 1
 
-    conda '/opt/miniconda3/envs/multiqc'
+    conda 'bioconda::multiqc'
 
-    publishDir "${params.outdir}/${params.pubdir}", mode: 'copy'
-    
+    publishDir "${params.outdir}/${params.pubdir}"
+
     input:
     path('multiqc_input/*')
 
@@ -40,6 +52,9 @@ process MULTIQC {
 
     script:
     """
-    multiqc multiqc_input/ --config ${params.multiqc_config} --title ${params.multiqc_report_title}
+    multiqc multiqc_input/ \
+        --config ${params.multiqc_config} \
+        --title ${params.multiqc_report_title} \
+        --filename ${params.fileprefix}.html
     """
 }
