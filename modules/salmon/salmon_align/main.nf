@@ -1,47 +1,57 @@
 #!/usr/bin/env nextflow
 
 /*
+================================================================================
 Coriell Institute for Medical Research
-RNAseq Pipeline. Started November 2023.
 
 Contributors:
 Anthony Pompetti <apompetti@coriell.org>
-
-Methodology adapted from:
-Gennaro Calendo
+================================================================================
 */
 
 /*
+================================================================================
 Enable Nextflow DSL2
+================================================================================
 */
 nextflow.enable.dsl=2
 
 /*
-Define local params 
+================================================================================
+Configurable variables for module
+================================================================================
 */
+
 params.outdir = "./results"
 params.pubdir = "salmon_align"
 params.db = false
 params.salmon_boots = 30
 
 /*
-Run salmon on each read stored within the reads_ch channel
+================================================================================
+Module declaration
+================================================================================
 */
+
 process SALMON_ALIGN {
     maxForks 4
     memory '8 GB'
     cpus 4
 
-    publishDir "${params.outdir}/salmon_align", mode: 'copy'
+    // Check batch and save output accordingly (only save quant files)
+    publishDir "${params.outdir}", mode: 'link',  saveAs: {
+      filename -> filename.endsWith(".gz") ?
+      { meta.batch == '' ? "${it}/${meta.id}/${params.pubdir}" : "${it}/${meta.batch}/${meta.id}/${params.pubdir}" } :
+      null
+    }
 
     input:
     tuple val(meta), path(reads)
-    val(state)
 
     output:
     path("*_quants.tar.gz"), emit: quants
-    //path("*_quants/aux_info/meta_info.json"), emit: meta_info
-    //path("*_quants/libParams/flenDist.txt"), emit: flenDist
+    path("*_quants/aux_info/meta_info.json"), emit: meta_info
+    path("*_quants/libParams/flenDist.txt"), emit: flenDist
     
     script:
     if(meta.single_end){

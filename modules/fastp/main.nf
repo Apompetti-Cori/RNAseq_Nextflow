@@ -41,7 +41,10 @@ process FASTP {
     tag { meta.batch == '' ? "${meta.id}" : "${meta.batch}_${meta.id}" }
 
     // Check batch and save output accordingly
-    publishDir "${params.outdir}/${meta.id}",  saveAs: { meta.batch == '' ? "${it}/${params.pubdir}" : "${meta.batch}/${it}/${params.pubdir}" }, mode: 'link'
+    publishDir "${params.outdir}/", mode: 'link',  saveAs: {
+        meta.batch == '' ? "${meta.id}/${params.pubdir}/${it}" :
+        "${meta.batch}/${meta.id}/${params.pubdir}/${it}"
+    }
 
     input:
     tuple val(meta), path(reads)

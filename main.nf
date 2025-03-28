@@ -46,6 +46,7 @@ Include subworkflows to main pipeline
 */
 
 include { PREPROCESS } from './subworkflows/preprocess/main.nf'
+include { ALIGN_QUANTIFY } from './subworkflows/align_quantify/main.nf'
 
 /*
 ================================================================================

@@ -21,6 +21,7 @@ nextflow.enable.dsl=2
 Configurable variables for pipeline
 ================================================================================
 */
+params.multiqc_config = "${projectDir}/modules/multiqc/multiqc_config.yaml"
 
 /*
 ================================================================================
@@ -60,12 +61,13 @@ workflow PREPROCESS {
         // Run multiqc on the fastp output
         MULTIQC(
             FASTP.out.json.collect(),
+            Channel.fromPath( "${params.multiqc_config}" ),
             "multiqc/preprocess",
-            "PREPROCESS Report",
+            "PREPROCESS_Report",
             "multiqc_report"
         )
 
-        emit:
-            fastp = FASTP.out.reads
+    emit:
+        fastp = FASTP.out.reads
          
 }

@@ -18,45 +18,38 @@ nextflow.enable.dsl=2
 
 /*
 ================================================================================
-Configurable variables for module
+Configurable variables for pipeline
 ================================================================================
 */
-
-params.outdir = "./nfoutput"
 
 /*
 ================================================================================
-Module declaration
+Include modules to main pipeline
+================================================================================
+*/
+
+/*
+================================================================================
+Include functions to main pipeline
 ================================================================================
 */
 
 
-process MULTIQC {
+/*
+================================================================================
+Workflow declaration
+================================================================================
+*/
 
-    memory '8 GB'
-    cpus 1
+workflow ALIGN_QUANTIFY {
 
-    tag { "${report_title}" }
+    take:
+        input_ch
 
-    conda 'bioconda::multiqc'
-    
-    publishDir "${params.outdir}", mode: 'link',  saveAs: { "${pubdir}/${it}" }
+        
 
-    input:
-    path('multiqc_input/*')
-    path(multiqc_config)
-    val(pubdir)
-    val(report_title)
-    val(fileprefix)
+    main:
 
-    output:
-    path("*.html")
-
-    script:
-    """
-    multiqc multiqc_input/ \
-        --config ${multiqc_config} \
-        --title ${report_title} \
-        --filename ${fileprefix}.html
-    """
+    emit:
+         
 }
