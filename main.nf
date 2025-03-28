@@ -24,6 +24,8 @@ Configurable variables for pipeline
 
 params.sample_table = false
 params.input_type = false
+params.genome = false
+params.db = params.genome ? params.genomes[ params.genome ].db ?: false : false
 
 /*
 ================================================================================
@@ -59,7 +61,10 @@ workflow {
     // Ingest sample table to create input channel
     input_ch = createInputChannel(params.sample_table, params.input_type)
 
-    // Run PREPROCESS subworkflow on input_ch
+    // Run PREPROCESS subworkflow on input_ch (sample_table)
     PREPROCESS(input_ch)
+
+    // Run ALIGN_QUANTIFY subworkflow on PREPROCESS.out.fastp
+    ALIGN_QUANTIFY(PREPROCESS.out.fastp)
 
 }

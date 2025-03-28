@@ -22,9 +22,8 @@ Configurable variables for module
 ================================================================================
 */
 
-params.outdir = "./results"
-params.pubdir = "salmon_align"
-params.db = false
+params.outdir = "./nfoutput"
+params.pubdir = "salmon"
 params.salmon_boots = 30
 
 /*
@@ -33,30 +32,31 @@ Module declaration
 ================================================================================
 */
 
-process SALMON_ALIGN {
+process SALMON_QUANT {
     maxForks 4
     memory '8 GB'
-    cpus 4
+    cpus 8
 
     // Check batch and save output accordingly (only save quant files)
     publishDir "${params.outdir}", mode: 'link',  saveAs: {
       filename -> filename.endsWith(".gz") ?
-      { meta.batch == '' ? "${it}/${meta.id}/${params.pubdir}" : "${it}/${meta.batch}/${meta.id}/${params.pubdir}" } :
+      { meta.batch == '' ? "${meta.id}/${params.pubdir}/${it}" : "${meta.batch}/${meta.id}/${params.pubdir}/${it}" } :
       null
     }
 
     input:
     tuple val(meta), path(reads)
+    each path(db)
 
     output:
-    path("*_quants.tar.gz"), emit: quants
+    tuple val(meta), path("*_quants.tar.gz"), emit: quants
     path("*_quants/aux_info/meta_info.json"), emit: meta_info
     path("*_quants/libParams/flenDist.txt"), emit: flenDist
     
     script:
     if(meta.single_end){
       """
-      salmon quant -i ${params.db} \
+      salmon quant -i ${db}/salmon_idx \
                    -l 'A' \
                    -r ${reads} \
                    -o ${meta.id}_quants \
@@ -71,7 +71,7 @@ process SALMON_ALIGN {
     }
     else{
       """
-      salmon quant -i ${params.db} \
+      salmon quant -i ${db}/salmon_idx \
                    -l 'A' \
                    -1 ${reads[0]} \
                    -2 ${reads[1]} \

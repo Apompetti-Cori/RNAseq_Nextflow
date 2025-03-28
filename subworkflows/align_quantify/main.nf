@@ -28,12 +28,14 @@ Include modules to main pipeline
 ================================================================================
 */
 
+include { SALMON_QUANT } from '../../modules/salmon/quant/main.nf'
+include { MULTIQC } from '../../modules/multiqc/main.nf'
+
 /*
 ================================================================================
 Include functions to main pipeline
 ================================================================================
 */
-
 
 /*
 ================================================================================
@@ -44,12 +46,17 @@ Workflow declaration
 workflow ALIGN_QUANTIFY {
 
     take:
-        input_ch
-
-        
+        reads_ch
 
     main:
 
+        // Quantify the reads using Salmon
+        SALMON_QUANT(
+            reads_ch,
+            channel.fromPath( "${params.db}" )
+        )
+
     emit:
-         
+        salmon = SALMON_QUANT.out.quants
+
 }
