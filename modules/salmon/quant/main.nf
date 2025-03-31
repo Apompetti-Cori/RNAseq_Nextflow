@@ -37,11 +37,17 @@ process SALMON_QUANT {
     memory '8 GB'
     cpus 8
 
+    // Set batch name and sample id to tag
+    tag { meta.batch == '' ? "${meta.id}" : "${meta.batch}_${meta.id}" }
+
     // Check batch and save output accordingly (only save quant files)
-    publishDir "${params.outdir}", mode: 'link',  saveAs: {
-      filename -> filename.endsWith(".gz") ?
-      { meta.batch == '' ? "${meta.id}/${params.pubdir}/${it}" : "${meta.batch}/${meta.id}/${params.pubdir}/${it}" } :
-      null
+    publishDir "${params.outdir}", mode: 'link', saveAs: { 
+      filename ->
+        if (filename.endsWith(".gz")) {
+            return meta.batch == '' ? "${meta.id}/${params.pubdir}/${filename}" : "${meta.batch}/${meta.id}/${params.pubdir}/${filename}"
+        } else {
+            return null
+        }
     }
 
     input:
@@ -50,8 +56,7 @@ process SALMON_QUANT {
 
     output:
     tuple val(meta), path("*_quants.tar.gz"), emit: quants
-    path("*_quants/aux_info/meta_info.json"), emit: meta_info
-    path("*_quants/libParams/flenDist.txt"), emit: flenDist
+    tuple path("*_quants/aux_info/*.json"), path("*_quants/libParams/*.{txt, json}"), emit: meta_files
     
     script:
     if(meta.single_end){
