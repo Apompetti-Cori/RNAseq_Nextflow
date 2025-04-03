@@ -56,7 +56,7 @@ process SALMON_QUANT {
 
     output:
     tuple val(meta), path("*_quants.tar.gz"), emit: quants
-    tuple path("*_quants/aux_info/*.json"), path("*_quants/libParams/*.{txt, json}"), emit: meta_files
+    path("*_quants"), emit: meta_files
     
     script:
     if(meta.single_end){
