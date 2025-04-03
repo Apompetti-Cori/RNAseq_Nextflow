@@ -56,6 +56,13 @@ workflow ALIGN_QUANTIFY {
             channel.fromPath( "${params.db}" )
         )
 
+        MULTIQC(
+            SALMON_QUANT.out.meta_files.collect(),
+            "multiqc/align_quantify",
+            "ALIGN_QUANTIFY_Report",
+            "multiqc_report"
+        )
+
     emit:
         salmon = SALMON_QUANT.out.quants
 
