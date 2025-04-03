@@ -21,6 +21,7 @@ nextflow.enable.dsl=2
 Configurable variables for pipeline
 ================================================================================
 */
+params.multiqc_config = "${projectDir}/modules/multiqc/multiqc_config.yaml"
 
 /*
 ================================================================================
