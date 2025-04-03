@@ -58,6 +58,7 @@ workflow ALIGN_QUANTIFY {
 
         MULTIQC(
             SALMON_QUANT.out.meta_files.collect(),
+            Channel.fromPath( "${params.multiqc_config}" ),
             "multiqc/align_quantify",
             "ALIGN_QUANTIFY_Report",
             "multiqc_report"
