@@ -40,10 +40,14 @@ process FASTP {
     // Set batch name and sample id to tag
     tag { meta.batch == '' ? "${meta.id}" : "${meta.batch}_${meta.id}" }
 
-    // Check batch and save output accordingly
-    publishDir "${params.outdir}/", mode: 'link',  saveAs: {
-        meta.batch == '' ? "${meta.id}/${params.pubdir}/${it}" :
-        "${meta.batch}/${meta.id}/${params.pubdir}/${it}"
+    // Check batch and save output accordingly (Don't save trimmed fastq files)
+    publishDir "${params.outdir}", mode: 'link', saveAs: { 
+      filename ->
+        if (filename.endsWith(".gz")) {
+            return null
+        } else {
+            return meta.batch == '' ? "${meta.id}/${params.pubdir}/${filename}" : "${meta.batch}/${meta.id}/${params.pubdir}/${filename}"
+        }
     }
 
     input:
