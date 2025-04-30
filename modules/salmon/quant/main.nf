@@ -41,13 +41,10 @@ process SALMON_QUANT {
     tag { meta.batch == '' ? "${meta.id}" : "${meta.batch}_${meta.id}" }
 
     // Check batch and save output accordingly (only save quant files)
-    publishDir "${params.outdir}", mode: 'link', saveAs: { 
-      filename ->
-        if (filename.endsWith(".gz")) {
-            return meta.batch == '' ? "${meta.id}/${params.pubdir}/${filename}" : "${meta.batch}/${meta.id}/${params.pubdir}/${filename}"
-        } else {
-            return null
-        }
+    publishDir "${params.outdir}", mode: 'link', pattern: "*.gz", saveAs: { 
+      filename -> {
+        return meta.batch == '' ? "${meta.id}/${params.pubdir}/${filename}" : "${meta.batch}/${meta.id}/${params.pubdir}/${filename}"
+      }
     }
 
     input:

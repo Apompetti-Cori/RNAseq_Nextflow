@@ -30,6 +30,7 @@ Include modules to main pipeline
 */
 
 include { SALMON_QUANT } from '../../modules/salmon/quant/main.nf'
+include { STAR } from '../../modules/star/main.nf'
 include { MULTIQC } from '../../modules/multiqc/main.nf'
 
 /*
@@ -51,14 +52,30 @@ workflow ALIGN_QUANTIFY {
 
     main:
 
-        // Quantify the reads using Salmon
+        // Create an empty channel for multiqc input
+        multiqc_ch = Channel.empty()
+
+        // Quantify the reads using Salmon pseudo-aligner
         SALMON_QUANT(
             reads_ch,
             channel.fromPath( "${params.db}" )
         )
+        multiqc_ch = multiqc_ch.mix(SALMON_QUANT.out.meta_files) // add salmon meta files to multiqc channel
 
+        // Align and quantify using STAR aligner (only if use specifies for STAR alignments)
+        if(params.star){
+
+        STAR(
+            reads_ch,
+            channel.fromPath( "${params.db}" )
+        )
+        multiqc_ch = multiqc_ch.mix(STAR.out.meta_files) // add star meta files to multiqc channel
+
+        }
+
+        // Perform multiqc on meta files
         MULTIQC(
-            SALMON_QUANT.out.meta_files.flatten().collect(),
+            multiqc_ch.collect(),
             Channel.fromPath( "${params.multiqc_config}" ),
             "multiqc/align_quantify",
             "ALIGN_QUANTIFY_Report",
