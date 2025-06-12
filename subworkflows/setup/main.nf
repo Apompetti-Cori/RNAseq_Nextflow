@@ -22,15 +22,6 @@ Configurable variables for pipeline
 ================================================================================
 */
 
-params.sample_table = false
-params.input_type = false
-params.genome = false
-params.db = params.genome ? params.genomes[ params.genome ].db ?: false : false
-
-// Optional flags
-params.star = false // specify whether to align using STAR aligner (default: false)
-params.screen = false // specify whether to screen for contamination using FASTQ Screen
-
 /*
 ================================================================================
 Include modules to main pipeline
@@ -42,18 +33,7 @@ Include modules to main pipeline
 Include functions to main pipeline
 ================================================================================
 */
-
 include { createInputChannel } from './functions/main.nf'
-
-/*
-================================================================================
-Include subworkflows to main pipeline
-================================================================================
-*/
-
-include { SETUP } from './subworkflows/setup/main.nf'
-include { PREPROCESS } from './subworkflows/preprocess/main.nf'
-include { ALIGN_QUANTIFY } from './subworkflows/align_quantify/main.nf'
 
 /*
 ================================================================================
@@ -61,15 +41,16 @@ Workflow declaration
 ================================================================================
 */
 
-workflow {
+workflow SETUP {
 
-    // Run SETUP subworkflow
-    SETUP()
+    take:
 
-    // Run PREPROCESS subworkflow on SETUP output
-    PREPROCESS(SETUP.out.input_ch)
+    main:
 
-    // Run ALIGN_QUANTIFY subworkflow on PREPROCESS.out.fastp
-    ALIGN_QUANTIFY(PREPROCESS.out.fastp)
+        // Ingest sample table to create input channel
+        input_ch = createInputChannel(params.sample_table, params.input_type)
 
+    emit:
+        input_ch
+         
 }
