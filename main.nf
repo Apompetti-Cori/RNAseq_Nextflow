@@ -43,15 +43,12 @@ Include functions to main pipeline
 ================================================================================
 */
 
-include { createInputChannel } from './functions/main.nf'
-
 /*
 ================================================================================
 Include subworkflows to main pipeline
 ================================================================================
 */
 
-include { SETUP } from './subworkflows/setup/main.nf'
 include { PREPROCESS } from './subworkflows/preprocess/main.nf'
 include { ALIGN_QUANTIFY } from './subworkflows/align_quantify/main.nf'
 
@@ -63,11 +60,8 @@ Workflow declaration
 
 workflow {
 
-    // Run SETUP subworkflow
-    SETUP()
-
     // Run PREPROCESS subworkflow on SETUP output
-    PREPROCESS(SETUP.out.input_ch)
+    PREPROCESS()
 
     // Run ALIGN_QUANTIFY subworkflow on PREPROCESS.out.fastp
     ALIGN_QUANTIFY(PREPROCESS.out.fastp)

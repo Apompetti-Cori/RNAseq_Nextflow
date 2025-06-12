@@ -41,6 +41,14 @@ Include functions to main pipeline
 ================================================================================
 */
 
+/*
+================================================================================
+Include subworkflows to main pipeline
+================================================================================
+*/
+
+include { SETUP } from '../../subworkflows/setup/main.nf'
+
 
 /*
 ================================================================================
@@ -51,15 +59,17 @@ Workflow declaration
 workflow PREPROCESS {
 
     take:
-        input_ch
 
     main:
 
         // Create an empty channel for multiqc input
         multiqc_ch = Channel.empty()
 
+        // Run SETUP: Ingest sample table to create input channel
+        SETUP()
+
         // Preprocess the sample table to change the files listed inside. Concatenates any multilane files.
-        PREPROCESS_READS(input_ch)
+        PREPROCESS_READS(SETUP.out.input_ch)
 
         // Trim and filter reads 
         FASTP(PREPROCESS_READS.out)
