@@ -27,7 +27,9 @@ params.input_type = false
 params.genome = false
 params.db = params.genome ? params.genomes[ params.genome ].db ?: false : false
 
+// Optional flags
 params.star = false // specify whether to align using STAR aligner (default: false)
+params.screen = false // specify whether to screen for contamination using FASTQ Screen
 
 /*
 ================================================================================

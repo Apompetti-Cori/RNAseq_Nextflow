@@ -8,4 +8,6 @@ run $(find $(pwd) -maxdepth 2 -type f -name "main.nf") \
 -with-trace $(pwd)/.logs/trace.txt \
 --sample_table $(find $(pwd) -type f -name "sample_table.csv") \
 --input_type "fastq" \
---genome "GRCh38"
+--genome "GRCh38" \
+--star \
+--screen
