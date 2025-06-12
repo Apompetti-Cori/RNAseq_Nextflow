@@ -33,7 +33,7 @@ Include modules to main pipeline
 Include functions to main pipeline
 ================================================================================
 */
-include { createInputChannel } from './functions/main.nf'
+include { createInputChannel } from '../../functions/main.nf'
 
 /*
 ================================================================================
